@@ -52,14 +52,14 @@ func (s *Server) handleSocket(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, response)
 		return
 	}
-	s.redisClient.Publish(c, msg.FormatMessage(*conn.Name))
+	s.redisClient.Publish(c, msg.FormatMessage())
 
 	defer func() {
 		var msg *rdb.Message
 		if msg, err = s.dao.NewMessage("has left the chat!", *conn.Name); err != nil {
 			fmt.Println("error sending last message")
 		}
-		s.redisClient.Publish(c, msg.FormatMessage(*conn.Name))
+		s.redisClient.Publish(c, msg.FormatMessage())
 	}()
 
 	wg := &sync.WaitGroup{}

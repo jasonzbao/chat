@@ -77,7 +77,7 @@ func main() {
 
 	for i := len(historyMessages.Messages) - 1; i >= 0; i-- {
 		msg := historyMessages.Messages[i]
-		fmt.Printf("%s%s%s: %s \n", Red, msg.Name, Reset, msg.Contents)
+		fmt.Printf("%s %s%s%s: %s \n", msg.CreatedAt, Red, msg.Name, Reset, msg.Contents)
 	}
 
 	ws, _, err := websocket.DefaultDialer.Dial("ws://localhost:9001/socket", nil)

@@ -31,13 +31,13 @@ func (s *Server) handleSocketMessage(ctx context.Context, message *WSMessage, co
 		switch inst {
 		case InstTypeName:
 			conn.Name = &symbols[1]
+			return nil
+		case InstTypeExit:
 			var msg *rdb.Message
-			if msg, err = s.dao.NewMessage(message.Message, *conn.Name); err != nil {
-				return err
+			if msg, err = s.dao.NewMessage("has left the chat!", *conn.Name); err != nil {
+				fmt.Println("error sending last message")
 			}
-			if err := s.redisClient.Publish(ctx, msg.FormatMessage(*conn.Name)); err != nil {
-				fmt.Printf("Had issues publishing to pubsub: %v", err)
-			}
+			s.redisClient.Publish(ctx, msg.FormatMessage())
 			return nil
 		}
 	}
@@ -50,7 +50,7 @@ func (s *Server) handleSocketMessage(ctx context.Context, message *WSMessage, co
 	if msg, err = s.dao.NewMessage(message.Message, *conn.Name); err != nil {
 		return err
 	}
-	if err := s.redisClient.Publish(ctx, msg.FormatMessage(*conn.Name)); err != nil {
+	if err := s.redisClient.Publish(ctx, msg.FormatMessage()); err != nil {
 		fmt.Printf("Had issues publishing to pubsub: %v", err)
 	}
 	return nil
