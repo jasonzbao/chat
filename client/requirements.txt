@@ -1,2 +1,0 @@
-rel==0.4.7
-websocket-client==1.4.0
