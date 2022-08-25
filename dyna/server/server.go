@@ -15,7 +15,7 @@ type Server struct {
 	dao         *rdb.Client
 	redisClient *redis.Client
 
-	messages []chan string
+	messages map[string]chan string
 }
 
 func NewServer(cfg *config.Config, dao *rdb.Client, redisClient *redis.Client) *Server {
@@ -24,7 +24,7 @@ func NewServer(cfg *config.Config, dao *rdb.Client, redisClient *redis.Client) *
 		dao:         dao,
 		redisClient: redisClient,
 
-		messages: []chan string{},
+		messages: map[string]chan string{},
 	}
 }
 

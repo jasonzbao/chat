@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -41,9 +42,9 @@ func (s *Server) handleSocket(c *gin.Context) {
 	}
 	defer ws.Close()
 
-	newName := string(uuid.New().String()[0:5])
+	chName := string(uuid.New().String()[0:5])
 	conn := &V1Connection{
-		Name: &newName,
+		Name: &chName,
 	}
 
 	var msg *rdb.Message
@@ -62,25 +63,32 @@ func (s *Server) handleSocket(c *gin.Context) {
 		s.redisClient.Publish(c, msg.FormatMessage())
 	}()
 
+	innerCtx, cancel := context.WithCancel(c)
+	defer cancel()
+
 	wg := &sync.WaitGroup{}
 	defer wg.Wait()
 
 	// buffer would be one thing we would need to tune
 	// drop messages if rate is too fast
 	subCh := make(chan string, 10)
-	s.messages = append(s.messages, subCh)
+	s.messages[chName] = subCh
+	defer func() {
+		delete(s.messages, chName)
+	}()
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		for {
 			select {
-			case <-c.Done():
+			case <-innerCtx.Done():
 				return
 			case msg := <-subCh:
 				err = ws.WriteMessage(websocket.TextMessage, []byte(msg))
 				if err != nil {
 					fmt.Println(err)
+					cancel()
 					break
 				}
 			}
@@ -89,27 +97,34 @@ func (s *Server) handleSocket(c *gin.Context) {
 
 	for {
 		//Read Message from client
-		mt, message, err := ws.ReadMessage()
-		if err != nil {
-			fmt.Println(err)
-			break
-		}
-
-		var wsMessage WSMessage
-		if err := json.Unmarshal(message, &wsMessage); err != nil {
-			fmt.Println("Error decoding message")
-			break
-		}
-
-		if err = s.handleSocketMessage(c, &wsMessage, conn); err != nil {
-			if errors.Is(err, dynaerrors.ErrorNameNotSet) {
-				ws.WriteMessage(mt, []byte("Name needs to be set before messages can be sent"))
-			} else if errors.Is(err, dynaerrors.ErrorInvalidInstruction) {
-				ws.WriteMessage(mt, []byte("Unrecognized instruction"))
-			} else {
-				fmt.Println("invalid message %v", err)
+		select {
+		case <-innerCtx.Done():
+			return
+		default:
+			mt, message, err := ws.ReadMessage()
+			if err != nil {
+				fmt.Println(err)
+				cancel()
+				break
 			}
-			continue
+
+			var wsMessage WSMessage
+			if err := json.Unmarshal(message, &wsMessage); err != nil {
+				fmt.Println("Error decoding message")
+				cancel()
+				break
+			}
+
+			if err = s.handleSocketMessage(c, &wsMessage, conn); err != nil {
+				if errors.Is(err, dynaerrors.ErrorNameNotSet) {
+					ws.WriteMessage(mt, []byte("Name needs to be set before messages can be sent"))
+				} else if errors.Is(err, dynaerrors.ErrorInvalidInstruction) {
+					ws.WriteMessage(mt, []byte("Unrecognized instruction"))
+				} else {
+					fmt.Println("invalid message %v", err)
+				}
+				continue
+			}
 		}
 	}
 
