@@ -13,12 +13,12 @@ import (
 type Server struct {
 	config      *config.Config
 	dao         *rdb.Client
-	redisClient *redis.Client
+	redisClient redis.Clientiface
 
 	messages map[string]chan string
 }
 
-func NewServer(cfg *config.Config, dao *rdb.Client, redisClient *redis.Client) *Server {
+func NewServer(cfg *config.Config, dao *rdb.Client, redisClient redis.Clientiface) *Server {
 	return &Server{
 		config:      cfg,
 		dao:         dao,

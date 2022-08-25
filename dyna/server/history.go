@@ -17,7 +17,7 @@ func (s *Server) handleHistory(c *gin.Context) {
 
 	messages, err := s.dao.RetrieveLastMessages()
 	if err != nil {
-		fmt.Println("Error: %v", err)
+		fmt.Printf("Error: %v", err)
 		c.JSON(http.StatusInternalServerError, nil)
 	}
 

@@ -1,0 +1,16 @@
+services:
+  db_unit:
+    container_name: db_unit
+    build: docker/postgres
+    ports:
+      - "5431:5432"
+    volumes:
+      - postgres_data_unit:/var/lib/postgresql/data
+      - ./scripts/db_init.sql:/docker-entrypoint-initdb.d/init.sql
+    environment:
+      - POSTGRES_PASSWORD=rooot
+      - POSTGRES_USER=rooot
+
+volumes:
+  es_data_unit:
+  postgres_data_unit:

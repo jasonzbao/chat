@@ -133,7 +133,7 @@ func (s *Server) handleSocket(c *gin.Context) {
 					cancel()
 					break
 				} else {
-					fmt.Println("invalid message %v", err)
+					fmt.Printf("invalid message %v", err)
 				}
 				continue
 			}

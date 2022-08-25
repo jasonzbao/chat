@@ -6,6 +6,11 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
+type Clientiface interface {
+	Publish(ctx context.Context, message string) error
+	ReceiveMessage() <-chan *redis.Message
+}
+
 type Client struct {
 	client *redis.Client
 	pubsub *redis.PubSub
