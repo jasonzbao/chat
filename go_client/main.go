@@ -16,11 +16,17 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-const (
-	Red   = "\033[31m"
-	Green = "\033[32m"
-	Reset = "\033[0m"
-)
+var colors = map[string]string{
+	"Reset":  "\033[0m",
+	"Red":    "\033[31m",
+	"Green":  "\033[32m",
+	"Yellow": "\033[33m",
+	"Blue":   "\033[34m",
+	"Purple": "\033[35m",
+	"Cyan":   "\033[36m",
+	"Gray":   "\033[37m",
+	"White":  "\033[97m",
+}
 
 // StringPrompt asks for a string value using the label
 func StringPrompt(label string) string {
@@ -47,6 +53,7 @@ type HistoryMessage struct {
 
 	Contents string `json:"content"`
 	Name     string `json:"name"`
+	Color    string `json:"color"`
 }
 
 type History struct {
@@ -77,7 +84,11 @@ func main() {
 
 	for i := len(historyMessages.Messages) - 1; i >= 0; i-- {
 		msg := historyMessages.Messages[i]
-		fmt.Printf("%s %s%s%s: %s \n", msg.CreatedAt, Red, msg.Name, Reset, msg.Contents)
+		var textColor = colors["Reset"]
+		if color, ok := colors[msg.Color]; ok {
+			textColor = color
+		}
+		fmt.Printf("%s %s%s: %s%s%s\n", msg.CreatedAt, colors["Red"], msg.Name, textColor, msg.Contents, colors["Reset"])
 	}
 
 	ws, _, err := websocket.DefaultDialer.Dial("ws://localhost:9001/socket", nil)
