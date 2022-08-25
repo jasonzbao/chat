@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/jasonzbao/dyna-take-home/config"
 	"github.com/jasonzbao/dyna-take-home/dao/rdb"
+	"github.com/jasonzbao/dyna-take-home/dao/redis"
 	"github.com/jasonzbao/dyna-take-home/server"
 )
 
@@ -43,8 +45,13 @@ func main() {
 		panic(err)
 	}
 
-	server := server.NewServer(cfg, dao)
-	err = server.Run(cfg.Port)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	redisClient := redis.NewClient(ctx, cfg.RedisAddr)
+
+	server := server.NewServer(cfg, dao, redisClient)
+	err = server.Run(ctx, cfg.Port)
 	if err != nil {
 		log.Fatalf("Error running server: %v", err)
 	}

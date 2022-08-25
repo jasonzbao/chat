@@ -8,6 +8,7 @@ import (
 type Config struct {
 	DBConnection string `json:"db_connection"`
 	Port         string `json:"port"`
+	RedisAddr    string `json:"redis_addr"`
 }
 
 // returns a new config from filename passed

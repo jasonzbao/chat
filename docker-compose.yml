@@ -29,5 +29,11 @@ services:
     environment:
       - CONFIG_FILE="./config.json"
 
+  redis:
+    container_name: redis
+    build: docker/redis
+    ports:
+      - "6379:6379"
+
 volumes:
   postgres_data:
