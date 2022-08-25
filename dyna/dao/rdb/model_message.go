@@ -8,11 +8,17 @@ import (
 	"github.com/pkg/errors"
 )
 
-const (
-	Red   = "\033[31m"
-	Green = "\033[32m"
-	Reset = "\033[0m"
-)
+var colors = map[string]string{
+	"Reset":  "\033[0m",
+	"Red":    "\033[31m",
+	"Green":  "\033[32m",
+	"Yellow": "\033[33m",
+	"Blue":   "\033[34m",
+	"Purple": "\033[35m",
+	"Cyan":   "\033[36m",
+	"Gray":   "\033[37m",
+	"White":  "\033[97m",
+}
 
 type Message struct {
 	ID        uuid.UUID `json:"id" gorm:"primaryKey"`
@@ -20,17 +26,23 @@ type Message struct {
 
 	Contents string `json:"content"`
 	Name     string `json:"name"`
+	Color    string `json:"color"`
 }
 
 func (m *Message) FormatMessage() string {
-	return fmt.Sprintf("%s %s%s%s: %s", m.CreatedAt, Red, m.Name, Reset, m.Contents)
+	var textColor = colors["Reset"]
+	if color, ok := colors[m.Color]; ok {
+		textColor = color
+	}
+	return fmt.Sprintf("%s %s%s: %s%s%s", m.CreatedAt, colors["Red"], m.Name, textColor, m.Contents, colors["Reset"])
 }
 
-func (c *Client) NewMessage(message, name string) (*Message, error) {
+func (c *Client) NewMessage(message, name, color string) (*Message, error) {
 	msg := &Message{
 		ID:       uuid.New(),
 		Name:     name,
 		Contents: message,
+		Color:    color,
 	}
 
 	if err := c.db.Create(msg).Error; err != nil {

@@ -28,7 +28,8 @@ type WSMessage struct {
 }
 
 type V1Connection struct {
-	Name *string `json:"name"`
+	Name  *string `json:"name"`
+	Color string  `json:"color"`
 }
 
 func (s *Server) handleSocket(c *gin.Context) {
@@ -48,7 +49,7 @@ func (s *Server) handleSocket(c *gin.Context) {
 	}
 
 	var msg *rdb.Message
-	if msg, err = s.dao.NewMessage("has joined the chat!", *conn.Name); err != nil {
+	if msg, err = s.dao.NewMessage("has joined the chat!", *conn.Name, conn.Color); err != nil {
 		response.Error = pkgErrors.Wrap(err, "Error sending first message")
 		c.JSON(http.StatusInternalServerError, response)
 		return
@@ -57,7 +58,7 @@ func (s *Server) handleSocket(c *gin.Context) {
 
 	defer func() {
 		var msg *rdb.Message
-		if msg, err = s.dao.NewMessage("has left the chat!", *conn.Name); err != nil {
+		if msg, err = s.dao.NewMessage("has left the chat!", *conn.Name, conn.Color); err != nil {
 			fmt.Println("error sending last message")
 		}
 		s.redisClient.Publish(c, msg.FormatMessage())
