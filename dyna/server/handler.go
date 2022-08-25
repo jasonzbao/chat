@@ -33,12 +33,7 @@ func (s *Server) handleSocketMessage(ctx context.Context, message *WSMessage, co
 			conn.Name = &symbols[1]
 			return nil
 		case InstTypeExit:
-			var msg *rdb.Message
-			if msg, err = s.dao.NewMessage("has left the chat!", *conn.Name); err != nil {
-				fmt.Println("error sending last message")
-			}
-			s.redisClient.Publish(ctx, msg.FormatMessage())
-			return nil
+			return dynaerrors.ErrorExitChat
 		}
 	}
 

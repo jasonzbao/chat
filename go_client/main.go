@@ -102,7 +102,7 @@ func main() {
 			default:
 				_, msg, err := ws.ReadMessage()
 				if err != nil {
-					fmt.Println("Error receiving message from socket %v", err)
+					fmt.Println(err)
 					cancel()
 					return
 				}

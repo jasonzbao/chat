@@ -21,3 +21,7 @@ var ErrorNameNotSet = &DynaError{
 var ErrorInvalidInstruction = &DynaError{
 	Err: errors.New("Instruction is not recognized"),
 }
+
+var ErrorExitChat = &DynaError{
+	Err: errors.New("Please exit chat"),
+}

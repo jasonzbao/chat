@@ -77,6 +77,9 @@ func (s *Server) handleSocket(c *gin.Context) {
 		delete(s.messages, chName)
 	}()
 
+	// specific channel for closing messages
+	cm := make(chan bool, 1)
+
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -89,7 +92,12 @@ func (s *Server) handleSocket(c *gin.Context) {
 				if err != nil {
 					fmt.Println(err)
 					cancel()
-					break
+					return
+				}
+			case <-cm:
+				cm := websocket.FormatCloseMessage(websocket.CloseNormalClosure, "see ya")
+				if err := ws.WriteMessage(websocket.CloseMessage, cm); err != nil {
+					fmt.Println(err)
 				}
 			}
 		}
@@ -120,6 +128,10 @@ func (s *Server) handleSocket(c *gin.Context) {
 					ws.WriteMessage(mt, []byte("Name needs to be set before messages can be sent"))
 				} else if errors.Is(err, dynaerrors.ErrorInvalidInstruction) {
 					ws.WriteMessage(mt, []byte("Unrecognized instruction"))
+				} else if errors.Is(err, dynaerrors.ErrorExitChat) {
+					cm <- true
+					cancel()
+					break
 				} else {
 					fmt.Println("invalid message %v", err)
 				}
