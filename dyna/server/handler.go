@@ -31,19 +31,31 @@ func (s *Server) handleSocketMessage(ctx context.Context, message *WSMessage, co
 	if string(message.Message[0]) == "/" {
 		symbols := strings.Split(message.Message, " ")
 		inst, ok := validInstructions[symbols[0]]
-		if !ok || len(symbols) < 2 {
+		if !ok {
 			return dynaerrors.ErrorInvalidInstruction
 		}
 		switch inst {
 		case InstTypeName:
+			if len(symbols) != 2 {
+				return dynaerrors.ErrorInvalidInstruction
+			}
 			conn.Name = &symbols[1]
 			return nil
 		case InstTypeExit:
+			if len(symbols) != 1 {
+				return dynaerrors.ErrorInvalidInstruction
+			}
 			return dynaerrors.ErrorExitChat
 		case InstTypeColor:
+			if len(symbols) != 2 {
+				return dynaerrors.ErrorInvalidInstruction
+			}
 			conn.Color = symbols[1]
 			return nil
 		case InstTypePrivate:
+			if len(symbols) <= 2 {
+				return dynaerrors.ErrorInvalidInstruction
+			}
 			chanName := symbols[1]
 			txt := fmt.Sprintf(privateTxt, *conn.Name) + strings.Join(symbols[2:], " ")
 			fmt.Println("private txt", txt)

@@ -52,9 +52,7 @@ func (s *Server) handleSocket(c *gin.Context) {
 
 	var msg *rdb.Message
 	if msg, err = s.dao.NewMessage("has joined the chat!", *conn.Name, conn.Color, conn.ChName); err != nil {
-		response.Error = pkgErrors.Wrap(err, "Error sending first message")
-		c.JSON(http.StatusInternalServerError, response)
-		return
+		fmt.Println("error sending first message")
 	}
 	s.redisClient.Publish(c, msg.FormatMessage(), "all")
 
