@@ -19,7 +19,7 @@ type mockRedisClient struct {
 	messages []string
 }
 
-func (m *mockRedisClient) Publish(ctx context.Context, message string) error {
+func (m *mockRedisClient) Publish(ctx context.Context, message, topic string) error {
 	m.messages = append(m.messages, message)
 	return nil
 }
@@ -43,6 +43,11 @@ func TestHandleSocketMessage(t *testing.T) {
 
 	err = s.handleSocketMessage(context.TODO(), &WSMessage{
 		Message: "/invalid",
+	}, conn)
+	require.True(t, errors.Is(err, dynaerrors.ErrorInvalidInstruction))
+
+	err = s.handleSocketMessage(context.TODO(), &WSMessage{
+		Message: "/name",
 	}, conn)
 	require.True(t, errors.Is(err, dynaerrors.ErrorInvalidInstruction))
 
