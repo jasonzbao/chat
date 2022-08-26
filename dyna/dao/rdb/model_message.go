@@ -24,9 +24,10 @@ type Message struct {
 	ID        uuid.UUID `json:"id" gorm:"primaryKey"`
 	CreatedAt time.Time `json:"created_at"`
 
-	Contents string `json:"content"`
-	Name     string `json:"name"`
-	Color    string `json:"color"`
+	ChannelName string `json:"channel name"`
+	Contents    string `json:"content"`
+	Name        string `json:"name"`
+	Color       string `json:"color"`
 }
 
 func (m *Message) FormatMessage() string {
@@ -34,15 +35,16 @@ func (m *Message) FormatMessage() string {
 	if color, ok := colors[m.Color]; ok {
 		textColor = color
 	}
-	return fmt.Sprintf("%s %s%s: %s%s%s", m.CreatedAt, colors["Red"], m.Name, textColor, m.Contents, colors["Reset"])
+	return fmt.Sprintf("%s %s%s (id %s): %s%s%s", m.CreatedAt, colors["Red"], m.Name, m.ChannelName, textColor, m.Contents, colors["Reset"])
 }
 
-func (c *Client) NewMessage(message, name, color string) (*Message, error) {
+func (c *Client) NewMessage(message, name, color, chName string) (*Message, error) {
 	msg := &Message{
-		ID:       uuid.New(),
-		Name:     name,
-		Contents: message,
-		Color:    color,
+		ID:          uuid.New(),
+		Name:        name,
+		Contents:    message,
+		Color:       color,
+		ChannelName: chName,
 	}
 
 	if err := c.db.Create(msg).Error; err != nil {
