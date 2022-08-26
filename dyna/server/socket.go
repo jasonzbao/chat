@@ -28,8 +28,9 @@ type WSMessage struct {
 }
 
 type V1Connection struct {
-	Name  *string `json:"name"`
-	Color string  `json:"color"`
+	ChName string  `json:"channel_name"`
+	Name   *string `json:"name"`
+	Color  string  `json:"color"`
 }
 
 func (s *Server) handleSocket(c *gin.Context) {
@@ -45,23 +46,24 @@ func (s *Server) handleSocket(c *gin.Context) {
 
 	chName := string(uuid.New().String()[0:5])
 	conn := &V1Connection{
-		Name: &chName,
+		ChName: chName,
+		Name:   &chName,
 	}
 
 	var msg *rdb.Message
-	if msg, err = s.dao.NewMessage("has joined the chat!", *conn.Name, conn.Color); err != nil {
+	if msg, err = s.dao.NewMessage("has joined the chat!", *conn.Name, conn.Color, conn.ChName); err != nil {
 		response.Error = pkgErrors.Wrap(err, "Error sending first message")
 		c.JSON(http.StatusInternalServerError, response)
 		return
 	}
-	s.redisClient.Publish(c, msg.FormatMessage())
+	s.redisClient.Publish(c, msg.FormatMessage(), "all")
 
 	defer func() {
 		var msg *rdb.Message
-		if msg, err = s.dao.NewMessage("has left the chat!", *conn.Name, conn.Color); err != nil {
+		if msg, err = s.dao.NewMessage("has left the chat!", *conn.Name, conn.Color, conn.ChName); err != nil {
 			fmt.Println("error sending last message")
 		}
-		s.redisClient.Publish(c, msg.FormatMessage())
+		s.redisClient.Publish(c, msg.FormatMessage(), "all")
 	}()
 
 	innerCtx, cancel := context.WithCancel(c)
@@ -80,6 +82,10 @@ func (s *Server) handleSocket(c *gin.Context) {
 
 	// specific channel for closing messages
 	cm := make(chan bool, 1)
+
+	// subscribe the server to dms
+	s.redisClient.Subscribe(innerCtx, chName)
+	defer s.redisClient.Unsubscribe(innerCtx, chName)
 
 	wg.Add(1)
 	go func() {

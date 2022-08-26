@@ -42,8 +42,17 @@ func (s *Server) Run(ctx context.Context, port string) error {
 				return
 			case msg := <-s.redisClient.ReceiveMessage():
 				fmt.Println("Got message from redis", msg.Payload)
-				for _, ch := range s.messages {
-					ch <- msg.Payload
+				if msg.Channel == "all" {
+					for _, ch := range s.messages {
+						ch <- msg.Payload
+					}
+				} else {
+					// private channel case. For now just support DMs
+					if ch, ok := s.messages[msg.Channel]; ok {
+						ch <- msg.Payload
+					} else {
+						fmt.Printf("Got a message to a channel that isn't on this server %s", msg.Channel)
+					}
 				}
 			}
 		}
